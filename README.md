@@ -36,12 +36,28 @@
    pip install -r requirements.txt
    ```
 
-4. **Streamlit アプリを実行する**
+   Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gzをダウンロードします。
+   # Windows の場合: curl　ではなく wget　 が実行可能な場合もあります。
+
+   ```bash
+   curl https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-60/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz -o Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
+   ```
+
+   圧縮データを解凍します。
+
+   ```bash
+   gunzip Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
+   unzip Araport11_GTF_genes_transposons.csv.zip
+   ```
+
+   
+
+5. **アプリを実行する**
 
    以下のコマンドでアプリケーションを起動します。
 
    ```bash
-   streamlit run GOgraph.py
+   python GOgraph.py
    ```
 
    もしくは、
