@@ -12,8 +12,8 @@
    リポジトリをローカル環境にクローンします。
 
    ```bash
-   git clone https://github.com/PM2951/GO.git
-   cd GO
+   git clone https://github.com/PM2951/ChIP-seq_PeakVis.git
+   cd ChIP-seq_PeakVis
    ```
 
    もしくは、zipファイルをダウンロードして解凍してください。
