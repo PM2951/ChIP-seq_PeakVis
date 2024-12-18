@@ -1,6 +1,4 @@
-# Streamlit アプリの実行方法
-
-このリポジトリには、`streamlit_app.py` という Streamlit アプリケーションのスクリプトが含まれています。このアプリケーションをローカル環境で実行するための手順を以下に示します。
+# ChIP-seq Peak Visualize アプリの実行方法
 
 ## 必要要件
 
@@ -17,18 +15,17 @@
    git clone https://github.com/PM2951/GO.git
    cd GO
    ```
+
    もしくは、zipファイルをダウンロードして解凍してください。
 
-2. **仮想環境を作成して有効化する (任意)**
-
-   仮想環境を作成することで、依存関係の競合を防ぐことができます。なくても実行可能です。
+3. **仮想環境を作成して有効化する (任意)**
 
    ```bash
-   python -m venv venv
+   python -m venv venv   #任意です。なくても実行できます。
    source venv/bin/activate  # Windows の場合: venv\Scripts\activate
    ```
 
-3. **必要なライブラリをインストールする**
+4. **必要なライブラリをインストールする**
 
    必要な Python ライブラリをインストールします。
 
@@ -50,8 +47,6 @@
    unzip Araport11_GTF_genes_transposons.csv.zip
    ```
 
-   
-
 5. **アプリを実行する**
 
    以下のコマンドでアプリケーションを起動します。
@@ -66,31 +61,14 @@
    streamlit run GO/GOgraph.py
    ```
 
-   初めての場合はEmailを聞かれますが、Emailっぽい形式であればなんでも大丈夫です。
+   可視化したい .sort.bamファイルは一度に複数選択できます。
+   ＊ .sort.bam.baiが同階層に存在する必要があります。
 
-   例) example@example.com　など
-
-   コマンドを実行すると、ローカルサーバーが起動します。表示される URL（通常は `http://localhost:8501`）をブラウザで開くことで、アプリケーションにアクセスできます。
+   検索したいMotif配列は カンマ区切り(,)で入力してください。
    
-6. **PantherGOからGene ontologyの結果を取得する**
-
-   tair : https://v2.arabidopsis.org/tools/go_term_enrichment.jsp
-
-   PantherGOの結果から、以下のような表を取得してください。
-
-
-   これを、Streamlit アプリ上のテキストボックスに入力するとグラフが作成できます。
 
 8. **アプリケーションの終了**
 
-   ターミナル上で [control + c] を押し、終了させる。
+    control + qボタン を押し、終了させる。
 
-## 注意事項
-
-- `requirements.txt` に記載されている依存関係を適切にインストールできない場合、環境や Python のバージョンを確認してください。
-- 問題が発生した場合は、エラーメッセージを確認し、必要に応じて `pip` や Streamlit のドキュメントを参照してください。
-
-## ライセンス
-
-このプロジェクトのライセンスに関する情報は `LICENSE` ファイルをご参照ください。
 
