@@ -52,13 +52,13 @@
    以下のコマンドでアプリケーションを起動します。
 
    ```bash
-   python GOgraph.py
+   python ChIP-seq_Peak_visualize_app.py
    ```
 
    もしくは、
    
    ```bash
-   streamlit run GO/GOgraph.py
+   python ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
    ```
 
    可視化したい .sort.bamファイルは一度に複数選択できます。
