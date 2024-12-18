@@ -20,7 +20,7 @@
 
 3. **仮想環境を作成して有効化する (任意)**
 
-    ###任意です。なくても実行できます。
+    任意です。なくても実行できます。
    
    ```bash
    python -m venv venv 
@@ -36,7 +36,8 @@
    ```
 
    Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gzをダウンロードします。
-   # Windows の場合: curl　ではなく wget　 が実行可能な場合もあります。
+
+   Windows の場合: curl　ではなく wget　 が実行可能な場合もあります。
 
    ```bash
    curl https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-60/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz -o Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
@@ -49,7 +50,7 @@
    unzip Araport11_GTF_genes_transposons.csv.zip
    ```
 
-6. **アプリを実行する**
+7. **アプリを実行する**
 
    以下のコマンドでアプリケーションを起動します。
 
