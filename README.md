@@ -20,12 +20,14 @@
 
 3. **仮想環境を作成して有効化する (任意)**
 
+    ###任意です。なくても実行できます。
+   
    ```bash
-   python -m venv venv   #任意です。なくても実行できます。
+   python -m venv venv 
    source venv/bin/activate  # Windows の場合: venv\Scripts\activate
    ```
 
-4. **必要なライブラリをインストールする**
+5. **必要なライブラリをインストールする**
 
    必要な Python ライブラリをインストールします。
 
@@ -47,7 +49,7 @@
    unzip Araport11_GTF_genes_transposons.csv.zip
    ```
 
-5. **アプリを実行する**
+6. **アプリを実行する**
 
    以下のコマンドでアプリケーションを起動します。
 
