@@ -64,6 +64,7 @@
    python ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
    ```
 
+   ## パラメーター
    可視化したい .sort.bamファイルは一度に複数選択できます。
    ＊ .sort.bam.baiが同階層に存在する必要があります。
 
