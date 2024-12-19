@@ -7,39 +7,20 @@
 
 ## 実行手順（ターミナル）
 
-1. **リポジトリをクローンする**
-
-   リポジトリをローカル環境にクローンします。
+1. **実行環境を構築する**
 
    ```bash
    git clone https://github.com/PM2951/ChIP-seq_PeakVis.git
    cd ChIP-seq_PeakVis
-   ```
-
-   もしくは、zipファイルをダウンロードして解凍してください。
-
-2. **必要なライブラリをインストールする**
-
-   必要な Python ライブラリをインストールします。
-
-   ```bash
    pip install -r requirements.txt
-   ```
-
-   Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gzをダウンロードします。（Windows の場合: curl　ではなく wget　 が実行可能な場合もあります。)
-
-   ```bash
    curl https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-60/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz -o Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
-   ```
-
-   圧縮データを解凍します。
-
-   ```bash
    gunzip Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
    unzip Araport11_GTF_genes_transposons.csv.zip
    ```
 
-3. **アプリを実行する**
+   エラーが出る場合は仮想環境を構築後に実行してください。
+
+2. **アプリを実行する**
 
    以下のコマンドでアプリケーションを起動します。
 
