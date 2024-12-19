@@ -35,9 +35,7 @@
    pip install -r requirements.txt
    ```
 
-   Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gzをダウンロードします。
-
-   （Windows の場合: curl　ではなく wget　 が実行可能な場合もあります。)
+   Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gzをダウンロードします。（Windows の場合: curl　ではなく wget　 が実行可能な場合もあります。)
 
    ```bash
    curl https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-60/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz -o Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
@@ -64,7 +62,7 @@
    python ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
    ```
 
-   ## パラメーター
+   #### パラメーター
    可視化したい .sort.bamファイルは一度に複数選択できます。
    ＊ .sort.bam.baiが同階層に存在する必要があります。
 
