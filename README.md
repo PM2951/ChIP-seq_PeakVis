@@ -2,7 +2,7 @@
 
 ## 必要要件
 
-- Python 3.7 以上
+- Python 3.10 推奨
 - 必要な Python ライブラリは `requirements.txt` に記載されています。
 
 ## 実行手順（ターミナル）
