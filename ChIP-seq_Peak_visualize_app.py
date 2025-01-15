@@ -1,4 +1,4 @@
-#%%
+
 import os
 import numpy as np
 import pandas as pd
@@ -10,14 +10,36 @@ import pysam
 from Bio import SeqIO
 from Bio.Seq import Seq
 import re
+import io
+import base64
 import pickle
 import requests
 from bs4 import BeautifulSoup
 from lxml import html
-import tkinter as tk
-from tkinter import filedialog, messagebox
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import matplotlib.pyplot as plt
+import flet as ft
+from flet import (
+    Column,
+    Container,
+    FilePicker,
+    FilePickerResultEvent,
+    Row,
+    Text,
+    TextField,
+    ElevatedButton,
+    Checkbox,
+    AlertDialog,
+    border,
+    padding,
+    alignment,
+    dropdown,
+    Dropdown,
+    border_radius,
+    
+)
+from flet.matplotlib_chart import MatplotlibChart
+import matplotlib
+matplotlib.use('agg')
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 print("読み込み中...")
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -60,17 +82,17 @@ class GeneCoveragePlotter:
             existing_dic[AGI] = symbol
             with open(filename, 'wb') as file:
                 pickle.dump(existing_dic, file)
-                print("updated pkl")
             
         else:
             symbol = existing_dic[AGI]
         return symbol
 
 
-    def search_nearby_region(self, start, chrom, end, gene_AGI, upper, lower):
+    def search_nearby_region(self, 
+                            # start, chrom, end, 
+                            gene_AGI, upper, lower):
         """
-        AGIが優先的に検索される、hitしないor AGI=Noneのとき、satr, end positionで検索
-        遺伝子にgene領域がない場合（non coding region）は遺伝子名を表示しない
+        AGI codeをもとに周辺のchrom, satrt, end, strandを検索
         """
         if gene_AGI is not None:
             strand  = self.genes_data[self.genes_data['gene_id'].str.contains(gene_AGI)]["strand"].unique()[0]
@@ -79,12 +101,12 @@ class GeneCoveragePlotter:
             end     = self.genes_data[self.genes_data['gene_id'].str.contains(gene_AGI)]["feature_end"].max()
             if strand == '-': return str(chrom) ,int(start- lower), int(end + upper)
             else: return str(chrom), int(start- upper), int(end + lower)
-        else: return str(chrom), int(start), int(end)
+        else: raise ValueError("AGI codeを入力してください。*大文字のみ")
 
 
     def plot_coverage(self, ax, bam_file, chrom, start, end, color, top):
         # BAMファイルを開く
-        samfile = pysam.AlignmentFile(bam_file, "rb")
+        samfile = pysam.AlignmentFile(bam_file, "rb", check_sq=False)
         # Calculate coverage
         coverage = [0] * (end - start)
         for read in samfile.fetch(chrom, start, end):
@@ -243,8 +265,13 @@ class GeneCoveragePlotter:
         return fig, axes
     
 
-    def plot_multiple_coverages(self, bam_files, chrom, start, end, gene_AGI, upper, lower, top, color, fig_height, fig_width, out_path, motif_list, find_motif, save):
-        new_chrom, new_start, new_end = self.search_nearby_region(chrom, start, end, gene_AGI, upper, lower)
+    def plot_multiple_coverages(self, bam_files, 
+                                # chrom, start, end, 
+                                gene_AGI, upper, lower, top, color, fig_height, fig_width, prefix, out_path, motif_list, find_motif, save):
+
+        new_chrom, new_start, new_end = self.search_nearby_region(
+                                                                # chrom, start, end, 
+                                                                gene_AGI, upper, lower)
         
         #figのサイズ比率
         num_axes = len(bam_files) + 2   #bam files + GeneBody + MotifPlot
@@ -268,166 +295,247 @@ class GeneCoveragePlotter:
             axes[-1].tick_params(bottom=False, left=False, right=False, top=False)
         # axes[i+1].set_position([bbox.x0, bbox.y0 * 0.8, bbox.width, bbox.height])
         if save: 
-            if gene_AGI is not None: plt.savefig(f"{out_path}/{gene_AGI}_peak.png", dpi=800, transparent=True)
+            if gene_AGI is not None: plt.savefig(f"{out_path}/{prefix}_{gene_AGI}_peak.png", dpi=800, transparent=True)
             else: plt.savefig(f"{out_path}/chr{new_chrom}_{new_start}_{new_end}_peak.png", dpi=800, transparent=True)
         return fig
         # plt.show()
 
 
-# %%
-# App GUI
-class GUI:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("Gene Coverage Plotter")
+# app UI
 
-        # 左側の入力フィールド
-        self.input_frame = tk.Frame(root)
-        self.input_frame.pack(side=tk.LEFT, padx=10, pady=10)
+def main(page: ft.Page):
+    page.title = "Gene Coverage Plotter"
+    page.window.width = 1200  
+    page.window.height = 900  
 
-        self.create_input_fields()
+    # FilePicker for BAM files
+    file_picker = FilePicker()
+    page.overlay.append(file_picker)
+    file_paths = []
 
-        # 右側のプロット表示エリア
-        self.plot_frame = tk.Frame(root)
-        self.plot_frame.pack(side=tk.RIGHT, padx=10, pady=10)
+    # FilePicker for output directory
+    dir_picker = FilePicker()
+    page.overlay.append(dir_picker)
+    output_path = ""
 
-        self.canvas = None
+    def select_files(e):
+        file_picker.pick_files(allow_multiple=True)
 
-    def create_input_fields(self):
-        self.labels = {
-            "bam_files": "BAM Files",
-            "chrom": "Chromosome",
-            "start": "Start Position",
-            "end": "End Position",
-            "gene_AGI": "Gene AGI",
-            "upper": "GenomeRange Upper bp",
-            "lower": "GenomeRange Lower bp",
-            "top": "Y-axis Max Value",
-            "color": "Color",
-            "fig_height": "Figure Height",
-            "fig_width": "Figure Width",
-            "motif_list": "Find Motif",
-        }
+    def select_output_dir(e):
+        dir_picker.get_directory_path()
 
-        self.default_values = {
-            "bam_files": "",  # ファイルは選択時に設定
-            "chrom": "1",
-            "start": "1000",
-            "end": "2000",
-            "gene_AGI": "AT1G01010",
-            "upper": "2000",
-            "lower": "100",
-            "top": "120",
-            "color": "blue",
-            "fig_height": "6",
-            "fig_width": "10",
-            "motif_list": "",
-        }
+    def file_picker_result(e: FilePickerResultEvent):
+        file_paths.clear()
+        if e.files:
+            for f in e.files:
+              file_paths.append(f.path)
+            bam_files_text.value = ",".join(file_paths)
+        else:
+             bam_files_text.value = ""
+        page.update()
 
-        self.entries = {}
+    def dir_picker_result(e: FilePickerResultEvent):
+       if e.path:
+           output_path = e.path
+           output_path_text.value = output_path
+       else:
+           output_path_text.value = ""
+       page.update()
+   
+    file_picker.on_result = file_picker_result
+    dir_picker.on_result = dir_picker_result
 
-        # inputファイル選択ボタン
-        self.file_button = tk.Button(
-            self.input_frame, text="Select BAM Files", command=self.select_files
-        )
-        self.file_button.grid(row=0, column=0, columnspan=2)
 
-        for idx, (key, label) in enumerate(self.labels.items()):
-            tk.Label(self.input_frame, text=label).grid(row=idx+1, column=0, sticky=tk.W)
-            entry = tk.Entry(self.input_frame)
-            entry.insert(0, self.default_values[key])  # デフォルト値を設定
-            entry.grid(row=idx+1, column=1)
-            self.entries[key] = entry
-        
-        # チェックボックス (save)
-        self.save_var = tk.BooleanVar(value=False)
-        self.save_check = tk.Checkbutton(self.input_frame, text="Save plot", variable=self.save_var)
-        self.save_check.grid(row=len(self.labels)+2, column=0, columnspan=2, sticky=tk.W)
+    # Input fields
+    labels = {
+        "bam_files": "BAM Files",
+        # "chrom": "Chromosome",
+        # "start": "Start Position",
+        # "end": "End Position",
+        "gene_AGI": "Gene AGI",
+        "upper": "GenomeRange Upper bp",
+        "lower": "GenomeRange Lower bp",
+        "top": "Y-axis Max Value",
+        "color": "Color",
+        "fig_height": "Figure Height",
+        "fig_width": "Figure Width",
+        "motif_list": "Find Motif",
+        "prefix": "Prefix text",
+    }
 
-        # チェックボックス (plot_motif)
-        self.motif_var = tk.BooleanVar(value=False)
-        self.motif_check = tk.Checkbutton(self.input_frame, text="Find Motif", variable=self.motif_var)
-        self.motif_check.grid(row=len(self.labels)+3, column=0, columnspan=2, sticky=tk.W)
+    default_values = {
+        "bam_files": "",  # ファイルは選択時に設定
+        # "chrom": "1",
+        # "start": 3000,
+        # "end": 5000,
+        "gene_AGI": "AT1G01010",
+        "upper": 2500,
+        "lower": 500,
+        "top": 150,
+        "color": "blue",
+        "fig_height": 6,
+        "fig_width": 10,
+        "motif_list": "ATGC",
+        "prefix": "Prefix_"
+    }
+    entries = {key: default for key, default in default_values.items()}   
 
-        # outputフォルダ選択ボタン
-        self.output_button = tk.Button(
-            self.input_frame, text="Select output folder", command=self.output_dir
-        )
-        self.output_button.grid(row=len(self.labels)+4, column=0, columnspan=2)
+    bam_files_text = TextField(label="BAM Files", read_only=True, expand=True)
+    entries["bam_files"] = bam_files_text
+    
+    output_path_text = TextField(label="Output Path", read_only=True, expand=True)
+    entries["output_path"] = output_path_text
+    
+    
+    input_fields = []
+    
+    input_fields.append(
+        Row([
+            ElevatedButton(text="Select BAM Files", on_click=select_files),
+            bam_files_text,
+        ])
+    )
 
-        tk.Label(self.input_frame, text="Output Path").grid(row=len(self.labels)+5, column=0, sticky=tk.W)
-        entry = tk.Entry(self.input_frame)
-        entry.insert(0, "")  # デフォルト値を設定
-        entry.grid(row=len(self.labels)+5, column=1)
-        self.entries["output_path"] = entry
-
-        # プロットボタン
-        self.plot_button = tk.Button(
-            self.input_frame, text="Plot", command=self.plot_graph
-        )
-        self.plot_button.grid(row=len(self.labels) +6, column=0, columnspan=2)
-
-    def select_files(self):
-        file_paths = filedialog.askopenfilenames(
-            title="Select BAM Files",
-            filetypes=[("All Files", "*.*")]
-        )
-        if file_paths:
-            self.entries["bam_files"].delete(0, tk.END)
-            self.entries["bam_files"].insert(0, ",".join(file_paths))  # 複数ファイルをカンマで区切って設定
-
-    def output_dir(self):
-        iDir = os.path.abspath(os.path.dirname(__file__))
-        iDirPath = filedialog.askdirectory(initialdir = iDir) 
-
-        if iDirPath:
-            self.entries["output_path"].delete(0, tk.END)
-            self.entries["output_path"].insert(0, "".join(iDirPath))  # 複数ファイルをカンマで区切って設定
-
-    def plot_graph(self):
-        # 入力値を取得
-        try:
-            bam_files = self.entries["bam_files"].get().split(",")  # カンマで分割
-            chrom = self.entries["chrom"].get()
-            start = int(self.entries["start"].get())
-            end = int(self.entries["end"].get())
-            gene_AGI = self.entries["gene_AGI"].get()
-            upper = float(self.entries["upper"].get())
-            lower = float(self.entries["lower"].get())
-            top = float(self.entries["top"].get())
-            color = self.entries["color"].get()
-            fig_height = float(self.entries["fig_height"].get())
-            fig_width = float(self.entries["fig_width"].get())
-            motif_list = [item for item in ",".join(self.entries["motif_list"].get().split(" ")).split(",") if len(item) > 0]
-            if self.entries["output_path"].get() is not None:
-                output_path = self.entries["output_path"].get()
-            else: output_path = None
-            save = self.save_var.get()
-            find_motif = self.motif_var.get()
-
-            plotter = GeneCoveragePlotter(genes_data)
-            fig = plotter.plot_multiple_coverages(
-                bam_files, chrom, start, end, gene_AGI, upper, lower, top, 
-                color, fig_height, fig_width, output_path, motif_list, find_motif=find_motif, save=save,
+    for key, label in labels.items():
+        if key != "bam_files" and key != "color" and key != "motif_list":
+          input_fields.append(
+              Row([
+                Text(label, width=150),
+                TextField(value=default_values[key], expand=True, on_change=lambda e, k=key: entries.update({k:e.control.value})),
+              ])
             )
+        elif key == "color":
+             input_fields.append(
+                Row([
+                    Text(label, width=150),
+                    TextField(
+                       value=default_values[key],
+                       expand=True,
+                       on_change = lambda e, k = key: entries.update({k:e.control.value})
+                    )
+                ])
+              )
+        elif key == "motif_list":
+            input_fields.append(
+                Row([
+                    Text(label, width=150),
+                    TextField(value=default_values[key], expand=True, on_change=lambda e, k=key: entries.update({k:e.control.value})),
+                ])
+            )
+            
+    input_fields.append(
+        Row([
+            ElevatedButton(text="Select output folder", on_click=select_output_dir),
+            output_path_text,
+        ])
+    )
+    
+    save_var = False
+    def save_changed(e):
+        nonlocal save_var
+        save_var = e.control.value
+    
+    input_fields.append(
+        Row([
+            Checkbox(label="Save Plot", on_change=save_changed)
+        ])
+    )
+        
+    motif_var = False
+    def motif_changed(e):
+        nonlocal motif_var
+        motif_var = e.control.value
+    input_fields.append(
+        Row([
+          Checkbox(label="Find Motif", on_change=motif_changed)
+        ])
+    )
 
-            self.update_plot(fig)
 
+    def plot_graph(e):
+       # 入力値を取得
+        try:
+            bam_files = entries["bam_files"].value.split(",")  # カンマで分割
+            # chrom = str(entries["chrom"])
+            # start = int(entries["start"])
+            # end = int(entries["end"])
+            gene_AGI = str(entries["gene_AGI"])
+            upper = float(entries["upper"])
+            lower = float(entries["lower"])
+            top = float(entries["top"])
+            color = entries["color"]
+            fig_height = float(entries["fig_height"])
+            fig_width = float(entries["fig_width"])
+            motif_list = [item for item in ",".join(entries["motif_list"].split(" ")).split(",") if len(item) > 0]
+            output_path = entries["output_path"].value if entries["output_path"] != "" else None
+            prefix = str(entries["prefix"])
+            save = save_var
+            find_motif = motif_var
+           
+            plotter = GeneCoveragePlotter(genes_data)
+
+
+            fig = plotter.plot_multiple_coverages(
+                bam_files, 
+                # chrom, start, end, 
+                gene_AGI, upper, lower, top, 
+                color, fig_height, fig_width, 
+                prefix, output_path, 
+                motif_list, find_motif=find_motif, save=save,
+            )
+            # 既存のキャンバスを削除
+            if canvas_container.content:
+                canvas_container.content = None
+                page.update()
+                
+            update_plot(fig)
+            plt.close(fig)
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            # エラーが発生した場合、エラーダイアログを表示
+            page.overlay.append(AlertDialog(title=Text(f"Error: {str(e)}"), open=True))  #修正
+            page.update()
 
-    def update_plot(self, fig):
-        # 既存のキャンバスを削除
-        if self.canvas:
-            self.canvas.get_tk_widget().destroy()
+    def update_plot(fig):
+        try:
 
-        # 新しいFigureを表示
-        self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().pack()
+            canvas_container.content = MatplotlibChart(fig,expand=True)
+            page.update()
+        except Exception as e:
+            page.overlay.append(AlertDialog(title=Text(f"Error during image update: {str(e)}"), open=True))
+            page.update()
+
+    # Plot area
+    canvas_container = Container(
+        border=border.all(1),
+        border_radius=border_radius.all(5),
+        padding=padding.all(10),
+        alignment=alignment.center,
+        expand=True,
+        content=None,
+    )
+
+    # Main layout
+    page.add(
+        Row(
+            [
+                Container(
+                    content=Column(input_fields, width=400, height = 700, scroll="always"),
+                    padding=10,
+                    border=border.all(1),
+                    border_radius=border_radius.all(5),
+                ),
+                
+               Column([
+                    ElevatedButton(text="Plot", on_click=plot_graph, expand=False),
+                    canvas_container,
+               ],
+               expand=True
+               ),
+            ],
+            expand=True
+        )
+    )
 
 
 if __name__ == "__main__":
-    root = tk.Tk()
-    app = GUI(root)
-    root.mainloop()
+    ft.app(target=main)
