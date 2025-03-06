@@ -16,6 +16,7 @@
    curl https://ftp.ensemblgenomes.ebi.ac.uk/pub/plants/release-60/fasta/arabidopsis_thaliana/dna/Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz -o Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
    gunzip Arabidopsis_thaliana.TAIR10.dna.toplevel.fa.gz
    unzip Araport11_GTF_genes_transposons.csv.zip
+   cd ~
    ```
 
    エラーが出る場合は仮想環境を構築後に実行してください。
@@ -24,12 +25,6 @@
 
    以下のコマンドでアプリケーションを起動します。
 
-   ```bash
-   python ChIP-seq_Peak_visualize_app.py
-   ```
-
-   もしくは、
-   
    ```bash
    python ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
    ```
