@@ -5,9 +5,9 @@
 - Python 3.10 推奨
 - 必要な Python ライブラリは `requirements.txt` に記載されています。
 
-## 実行手順（ターミナル）
+## 実行環境を構築する（ターミナル）
 
-1. **実行環境を構築する**
+- **実行環境を構築する**
 
    ```bash
    git clone https://github.com/PM2951/ChIP-seq_PeakVis.git
@@ -21,9 +21,9 @@
 
    エラーが出る場合は仮想環境を構築後に実行してください。
 
-2. **アプリを実行する**
+## アプリを実行する
 
-   以下のコマンドでアプリケーションを起動します。
+- 以下のコマンドでアプリケーションを起動します。
 
    ```bash
    python ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
