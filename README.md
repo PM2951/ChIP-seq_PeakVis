@@ -26,7 +26,7 @@
 - 以下のコマンドでアプリケーションを起動します。
 
    ```bash
-   python ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
+   python ~/ChIP-seq_PeakVis/ChIP-seq_Peak_visualize_app.py
    ```
    
 
