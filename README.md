@@ -2,7 +2,7 @@
 
 ## 必要要件
 
-- Python 3.10 以降を推奨。導入はこちらを参考→ https://github.com/PM2951/Python-forMAC/blob/main/readme.md
+- Python 3.10 以降を推奨。[参照](https://github.com/PM2951/Python-forMAC/blob/main/readme.md)
 
 ## 実行環境を構築する（ターミナル）
 
